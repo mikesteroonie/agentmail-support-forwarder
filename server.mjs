@@ -6,6 +6,7 @@ const MAX_BODY_BYTES = 1024 * 1024
 const WEBHOOK_TOLERANCE_SECONDS = 5 * 60
 const LOOP_HEADER = 'X-AgentMail-Auto-Forwarded'
 const DEFAULT_AGENTMAIL_BASE_URL = 'https://api.agentmail.to/v0'
+const FORWARDED_EVENT_TYPES = new Set(['message.received', 'message.received.unauthenticated'])
 
 const requiredEnv = (name, env = process.env) => {
     const value = env[name]?.trim()
@@ -130,7 +131,7 @@ export const createRequestHandler =
             }
 
             const { event_id: eventId, event_type: eventType, message } = event
-            if (eventType !== 'message.received') {
+            if (!FORWARDED_EVENT_TYPES.has(eventType)) {
                 console.info('Ignoring webhook event', { event_id: eventId, event_type: eventType })
                 respond(response, 204)
                 return
