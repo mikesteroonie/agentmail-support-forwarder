@@ -103,6 +103,13 @@ const respond = (response, statusCode, body = '') => {
 
 const isRetryableStatus = (status) => status === 408 || status === 409 || status === 429 || status >= 500
 
+export const isRetryableForwardFailure = (status, error) =>
+    isRetryableStatus(status) ||
+    (status === 403 &&
+        error?.code === 'message_rejected' &&
+        typeof error?.message === 'string' &&
+        error.message.toLowerCase().includes('sending paused'))
+
 export const createRequestHandler =
     ({ config, fetchImpl = fetch }) =>
     async (request, response) => {
@@ -168,12 +175,15 @@ export const createRequestHandler =
                 return
             }
 
+            const forwardError = await forwardResponse.json().catch(() => undefined)
+            const retryable = isRetryableForwardFailure(forwardResponse.status, forwardError)
             console.error('AgentMail forward failed', {
                 event_id: eventId,
                 message_id: message.message_id,
                 status: forwardResponse.status,
+                retryable,
             })
-            respond(response, isRetryableStatus(forwardResponse.status) ? 503 : 204)
+            respond(response, retryable ? 503 : 204)
         } catch (error) {
             const statusCode = error?.statusCode || 500
             console.error('Webhook processing failed', {

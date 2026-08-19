@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildForwardRequest, loadConfig, verifyWebhook } from './server.mjs'
+import { buildForwardRequest, isRetryableForwardFailure, loadConfig, verifyWebhook } from './server.mjs'
 
 const encodedSecret = Buffer.from('test signing secret').toString('base64')
 const secret = `whsec_${encodedSecret}`
@@ -76,4 +76,16 @@ test('loadConfig normalizes inboxes and removes a trailing base URL slash', () =
             webhookSecret: secret,
         }
     )
+})
+
+test('sending-paused rejections remain retryable', () => {
+    assert.equal(
+        isRetryableForwardFailure(403, {
+            code: 'message_rejected',
+            message: 'Message rejected: Sending paused for this account.',
+        }),
+        true
+    )
+    assert.equal(isRetryableForwardFailure(403, { code: 'forbidden', message: 'Forbidden' }), false)
+    assert.equal(isRetryableForwardFailure(429, undefined), true)
 })
