@@ -53,7 +53,6 @@ const hasLoopMarker = (headers = {}) =>
     Object.entries(headers).some(([name, value]) => name.toLowerCase() === LOOP_HEADER.toLowerCase() && Boolean(value))
 
 const replyToFor = (message) => {
-    if (Array.isArray(message.reply_to) && message.reply_to.length) return message.reply_to.filter(Boolean)
     return typeof message.from === 'string' && message.from.trim() ? [message.from] : undefined
 }
 
