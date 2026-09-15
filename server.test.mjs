@@ -40,19 +40,19 @@ test('verifyWebhook rejects a bad or stale signature', () => {
     assert.equal(verifyWebhook({ body, headers: signedHeaders(body, timestamp - 301), secret, now }), false)
 })
 
-test('buildForwardRequest preserves the original Reply-To and adds a loop marker', () => {
+test('buildForwardRequest replies to the original sender even when Reply-To points to support', () => {
     assert.deepEqual(
         buildForwardRequest(
             {
                 from: 'Sender <sender@example.com>',
-                reply_to: ['reply@example.com'],
+                reply_to: ['support@agentmail.top'],
                 subject: 'Need help',
             },
             'support@agentmail.cc'
         ),
         {
             to: ['support@agentmail.cc'],
-            reply_to: ['reply@example.com'],
+            reply_to: ['Sender <sender@example.com>'],
             subject: 'Need help',
             headers: { 'X-AgentMail-Auto-Forwarded': 'support-gmail-forward-v1' },
         }

@@ -2,6 +2,8 @@
 
 Receives signed AgentMail `message.received` and `message.received.unauthenticated` webhooks for `support@agentmail.to` and forwards the original message, including attachments, to `support@agentmail.cc` through AgentMail's forward API. Spam and blocked events are intentionally not subscribed.
 
+Forwarded messages set `Reply-To` to the original message's `From` address, even when the incoming message specifies a different `Reply-To`. Replies therefore go directly to the original sender.
+
 ## Environment
 
 - `AGENTMAIL_API_KEY`: inbox-scoped key with `message_send` permission
